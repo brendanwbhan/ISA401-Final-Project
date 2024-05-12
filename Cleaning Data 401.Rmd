@@ -1,0 +1,111 @@
+---
+title: "Clean 401 Project"
+author: "Michael Lu"
+date: "2024-05-07"
+output: html_document
+---
+
+Immigrants 2022
+```{r}
+library(dplyr)
+library(readr)
+
+immi2022 <- readxl::read_xlsx("Data/Number of Immigrants 2022.xlsx", sheet = 2, skip = 4)
+
+names(immi2022)
+
+colnames(immi2022) <- c("State", "Population", "LawfulPerminantResidents_Total",
+                    "del1", "LawfulPerminantResidents_NewArrivals", 
+                    "del2", "LawfulPerminantResidents_Adjustments", "del3",
+                    "Nonimmigrants_Total", "del4", "Naturalizations_Total", 
+                    "del5", "Refugees_Total", "del6", "Asylees_Total", "del7")
+
+immi2022 <- subset(immi2022, select = -c(del1, del2, del3, del4, del5, del6, del7))
+
+csv_file <- "Immigrants2022Totals.csv"
+write.csv(immi2022, file = csv_file, row.names = FALSE)
+```
+
+States Vector
+```{r}
+states <- c("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming")
+```
+
+For Loop for 50 states + District of Columbia + Puerto Rico
+```{r}
+immistates <- data.frame()
+immistatesFULL <- data.frame()
+
+for(i in 5:56) {
+  temp <- readxl::read_xlsx("Data/Number of Immigrants 2022.xlsx", sheet = i, skip = 4, range = "A5:P15")
+  
+  colnames(temp) <- c("Year", "Population", "LawfulPerminantResidents_Total",
+                              "del1", "LawfulPerminantResidents_NewArrivals", 
+                              "del2", "LawfulPerminantResidents_Adjustments", "del3",
+                              "Nonimmigrants_Total", "del4", "Naturalizations_Total", 
+                              "del5", "Refugees_Total", "del6", "Asylees_Total", "del7")
+  
+  temp <- subset(temp, select = -c(del1, del2, del3, del4, del5, del6, del7))
+  
+  immistates <- rbind(immistates, temp)
+}
+```
+
+Every 10 observations has a different state
+```{r}
+States <- data.frame(State = character())
+
+for (i in 1:52) {
+  # Calculate the observation numbers for the current state
+  obs_numbers <- (10 * (i - 1) + 1):(10 * i)
+  
+  # Add rows for the current state
+  for (num in obs_numbers) {
+    States <- rbind(States, data.frame(State = states[i]))
+  }
+}
+```
+
+Binding the 2 dfs together
+```{r}
+immistatesFULL <- cbind(States, immistates)
+
+csv_file <- "FullImmiStates.csv"
+write.csv(immistatesFULL, file = csv_file, row.names = FALSE)
+```
+
+
+Unemployment Source
+```{r}
+ump <- readxl::read_xlsx("Data/States Employment status of the civilian noninstitutional population 1976-2023.xlsx", skip = 6)
+
+colnames(ump) <- c("FIPS", "State", "Year","Month", "Pop > 16", 
+                   "LaborForce_Total", "LaborForce_PerOfPop", "Employed_Total",
+                   "Employed_PercOfPop", "Unemployed_Total", "Unemployed_PercOfPop")
+names(ump)
+
+ump <- ump[-1,]
+
+csv_file <- "UnemploymentClean.csv"
+write.csv(ump, file = csv_file, row.names = FALSE)
+
+```
+
+
+US IMMI Totals
+```{r}
+usimmitotal <- data.frame()
+usimmitotal <- readxl::read_xlsx("Data/Number of Immigrants 2022.xlsx", 
+                              sheet = 4, skip = 4, range = "A5:I15")
+
+colnames(usimmitotal) <- c("Year", "Population", "LawfulPerminantResidents_Total",
+                           "LawfulPerminantResidents_NewArrivals", 
+                           "LawfulPerminantResidents_Adjustments",
+                          "Nonimmigrants_Total", "Naturalizations_Total", 
+                          "Refugees_Total", "Asylees_Total")
+
+csv_file <- "USImmiTotal.csv"
+write.csv(usimmitotal, file = csv_file, row.names = FALSE)
+
+```
+
